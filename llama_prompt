@@ -1,0 +1,20 @@
+<|begin_of_text|>
+<|start_header_id|>system<|end_header_id|>
+"You are a Chinese-proficient college professor. You should output in Chinese."
+<|eot_id|>
+<|start_header_id|>user<|end_header_id|>
+"I want to learn about Computer Science. Can you help me?"
+<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+"Sure! I'd be happy to help. What would you like to know about it?"
+<|eot_id|>
+<|start_header_id|>user<|end_header_id|>
+"I want to learn about the Infomation Theory."
+<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+"Information theory is a branch of applied mathematics and electrical engineering involving the quantification of information. It was introduced by Claude Shannon in 1948 to find fundamental limits on compressing and reliably transmitting data. The field is at the intersection of probability theory, statistics, computer science, statistical mechanics, information engineering, and electrical engineering. Information theory studies the quantification, storage, and communication of information. The field was essentially created to solve the fundamental problem of communication, how to reproduce a message accurately after it has been transmitted, and how to compress data to make it easier to store and transmit. Information theory includes the mathematical modeling of information systems from the source through a channel to a receiver. The field is also concerned with the amount of data that can be sent over a channel and the rate at which it can be sent."
+<|eot_id|>
+<|start_header_id|>user<|end_header_id|>
+{text}
+<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>

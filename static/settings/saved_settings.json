@@ -1,0 +1,7 @@
+{
+    "temperature": "0.1",
+    "audio": false,
+    "language": "0",
+    "use_RAG": false,
+    "embedding_model": "5"
+}

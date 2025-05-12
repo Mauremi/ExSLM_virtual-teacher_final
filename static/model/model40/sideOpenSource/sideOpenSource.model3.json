@@ -1,0 +1,24 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "sideOpenSource.moc3",
+		"Textures": [
+			"sideOpenSource.4096/texture_00.png",
+			"sideOpenSource.4096/texture_01.png"
+		],
+		"Physics": "sideOpenSource.physics3.json",
+		"DisplayInfo": "sideOpenSource.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}
