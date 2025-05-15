@@ -3,14 +3,12 @@ import base64
 import shutil
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-import flask
 import numpy as np
 import portalocker
 import boto3
 import json
 
 import sounddevice
-import speech_recognition as sr
 from amazon_transcribe.client import TranscribeStreamingClient
 from amazon_transcribe.handlers import TranscriptResultStreamHandler
 from amazon_transcribe.model import TranscriptResultStream, TranscriptEvent
@@ -18,31 +16,22 @@ from flask import Flask, render_template, Response, send_from_directory, request
 from flask_socketio import SocketIO
 import threading
 import time
-from selenium.webdriver.chrome.service import Service
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from werkzeug.utils import secure_filename
 from api_request_schema import api_request_list
 import os
 import markdown
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-import sys
 import uuid
 from pathlib import Path
-import fitz # pip install PyMuPDF
 import re
 from flask_cors import CORS # pip install flask-cors
 import io
 from langchain.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from typing import List, Tuple, Optional
-from transformers import AutoTokenizer, AutoModel
 import torch
-import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModel
 
 # 初始化
