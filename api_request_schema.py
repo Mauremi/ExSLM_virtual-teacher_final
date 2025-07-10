@@ -1,4 +1,18 @@
 api_request_list = {
+    'alibaba.qwen/qwen3-1.7b:free':{
+        "modelId": "alibaba.qwen/qwen3-1.7b:free",
+        "contentType": "application/json",
+        "accept": "*/*",
+        "body": {
+            "model": "qwen/qwen3-1.7b:free",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "What is the meaning of life?"
+                }
+            ],
+        }
+    },
     'anthropic.claude-3-sonnet-20240229-v1:0': {
         "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
         "contentType": "application/json",

@@ -660,7 +660,6 @@
         }
 
         #chat-content-container {
-
             top: 0;
             bottom: 0;
             position: relative;
@@ -834,6 +833,64 @@
         #copy-feedback {
             color: green;
             margin-top: 10px;
+        }
+
+        .rag-info-button {
+            position: absolute; /* 绝对定位 */
+            bottom: 0; /* 放在容器底部 */
+            left: 110px; /* 放在容器左侧 */
+            margin: 10px; /* 根据需要调整间距 */
+            display: none;
+            border: none;
+            background-color: #ffffff;
+        }
+
+        .rag-info-button:hover {
+            background-color: #f0f0f0; /* 鼠标悬停时的背景色 */
+        }
+
+        /* 文字信息面板样式 */
+        #RAG-info-modal {
+            display: none;
+            flex-direction : column;
+            align-items : center;
+            position: fixed;
+            left: 30%;
+            width: 800px;
+            height: 600px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 12px;
+            overflow-y: auto;
+            z-index: 101;
+        }
+
+        .RAG-info-modal-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            margin: -17px 0 5px 10px;
+        }
+
+        #text-info-content p {
+            margin: 0 0 0 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .close-btn {
+            z-index: 1002; /* 新增：确保高于其他内容 */
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+          color: red;
         }
 
         /* 头像和名字的容器 */
@@ -1171,15 +1228,24 @@
                     <option value="0" >anthropic.claude-3-5-sonnet-20240620-v1:0</option>
                     <option value="1">anthropic.claude-3-sonnet-20240229-v1:0</option>
                     <option value="2">meta.llama3-70b-instruct-v1</option>
+                    <option value="3" >alibaba.qwen/qwen3-1.7b:free</option>
                 </select>
                 <div id="embedding-model-state" style="font-size: medium; color: #666; text-align: right; margin-left: auto; display: block;"></div>
             </div>
 
             <!-- 文字模式容器 -->
-            <div id="text-mode">
+            <div id="text-mode", c;>
                 <button id="scroll-to-bottom" onclick="smartScroll()">↓</button>
+                <!--RAG内容悬浮窗口-->
+                <div id="RAG-info-modal">
+                    <span class="close-btn">&times;</span>  <!-- 关闭按钮 -->
+                    <h3>RAG检索结果</h3>
+                    <div class="RAG-info-modal-content">
+                        <p>这里是模态窗口内容...</p>
+                    </div>
+                </div>
                 <div id="input-container">
-                    <label for="user-input"></label><textarea id="user-input" placeholder="请输入您的消息..." ></textarea>
+                    <label for="user-input"></label><textarea id="user-input" placeholder="请输入您的消息..."></textarea>
                     <div style="display: flex; gap: 8px; flex-shrink: 0;">
                         <button id="send-button" class="circle-button">➤</button>
                         <button id="upload-file-button" class="circle-button" onclick="handleUpload()">✉</button>
@@ -1208,8 +1274,8 @@
                     </div>
                     <div class="message ai-message">
                         <div class="profile-icon">
-                                <img src="{{ url_for('static', filename='images/avatar.png')}}">
-                            </div>
+                            <img src="{{ url_for('static', filename='images/avatar.png')}}">
+                        </div>
                         <div class="ai-header">
                             <span class="ai-name">ExSLM</span>
                             <div class="message-content">
@@ -1220,6 +1286,8 @@
                         <div class="bottom-button-container">
                             <button class="copy-button">📋</button>
                             <button class="info-button">ℹ️</button>
+                            <!-- RAG文字浮窗 -->
+                            <button id="toggle-text-panel" class="rag-info-button">📱</button>
                         </div>
                         <p id="copy-feedback" style="display: none;">已复制到剪贴板！</p>
                     </div>
@@ -1376,6 +1444,32 @@
             });
 
         });
+
+        // 悬浮窗口
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('RAG-info-modal');
+
+            document.addEventListener('click', function(e) {
+                // 1. 点击触发按钮时显示模态窗口
+                if (e.target.classList.contains('rag-info-button')) {
+                    const ragDisplay = e.target.getAttribute('data-info');
+                    // 修改选择器以匹配新结构
+                    const modalContent = modal.querySelector('.RAG-info-modal-content p');
+
+                    modalContent.innerHTML = ragDisplay;
+                    modal.style.display = 'flex';
+                    console.log('Modal opened with content:', ragDisplay);
+                }
+
+                // 2. 点击关闭按钮时隐藏模态窗口
+                if (e.target.classList.contains('close-btn')) {
+                    console.log('Close modal');
+                    modal.style.display = 'none';
+                    console.log('Modal closed');
+                }
+            });
+        });
+
 
         // 文件管理模块
         socket.on('upload_files', (data) => {
@@ -1854,6 +1948,22 @@
             console.log(infoButton.attributes);
         });
 
+        socket.on("retrievedRAG", (ragData) => {
+
+            const ragdata = ragData;
+            console.log("ragdata", ragdata);
+
+            // 获取 infoButton
+            const RAGButtons = document.getElementsByClassName("rag-info-button");
+            const RAGButton = RAGButtons[RAGButtons.length - 1];
+            console.log(RAGButton);
+
+            // 设置 RAGButton 属性为检索到的内容
+            const formattedData = ragdata.map(item => String(item)).join('<br><br><br><br>');
+            RAGButton.setAttribute("data-info", formattedData);
+
+        });
+
         socket.on("ai_response_end", (aiResponse) => {
             interrupted = false;
             outputting = false; // 重置输出状态
@@ -1863,9 +1973,13 @@
             const copyButton = copyButtons[copyButtons.length - 1]
             const infoButtons = document.getElementsByClassName("info-button")
             const infoButton = infoButtons[infoButtons.length - 1]
-            console.log(copyButton); // 检查是否成功获取元素
+            const ragButtons = document.getElementsByClassName("rag-info-button");
+            const ragButton = ragButtons[ragButtons.length - 1]
             copyButton.style.display = 'block'
             infoButton.style.display = 'block';
+            ragButton.style.display = 'flex';
+
+
 
             // 找到最新的复制按钮，并将 aiResponse 存储到其 data 属性中
             if (copyButton) {

@@ -3,12 +3,14 @@ import base64
 import shutil
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+import flask
 import numpy as np
 import portalocker
 import boto3
 import json
 
 import sounddevice
+import speech_recognition as sr
 from amazon_transcribe.client import TranscribeStreamingClient
 from amazon_transcribe.handlers import TranscriptResultStreamHandler
 from amazon_transcribe.model import TranscriptResultStream, TranscriptEvent
@@ -16,22 +18,31 @@ from flask import Flask, render_template, Response, send_from_directory, request
 from flask_socketio import SocketIO
 import threading
 import time
+from selenium.webdriver.chrome.service import Service
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from werkzeug.utils import secure_filename
 from api_request_schema import api_request_list
 import os
 import markdown
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+import sys
 import uuid
 from pathlib import Path
+import fitz # pip install PyMuPDF
 import re
 from flask_cors import CORS # pip install flask-cors
 import io
 from langchain.document_loaders import TextLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from typing import List, Tuple, Optional
+from transformers import AutoTokenizer, AutoModel
 import torch
+import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModel
 
 # 初始化
@@ -55,7 +66,7 @@ class Config:
     embedding_model_name_index = 0  # 嵌入模型名称
     use_RAG = False
     model_index = 0
-    model_id_list = ['anthropic.claude-3-5-sonnet-20240620-v1:0','anthropic.claude-3-sonnet-20240229-v1:0','meta.llama3-70b-instruct-v1']
+    model_id_list = ['anthropic.claude-3-5-sonnet-20240620-v1:0','anthropic.claude-3-sonnet-20240229-v1:0','meta.llama3-70b-instruct-v1', 'alibaba.qwen/qwen3-1.7b:free']
     model_id = os.getenv('MODEL_ID', model_id_list[model_index])
     api_request = api_request_list[model_id]
 
@@ -508,15 +519,22 @@ class UserInput:
     @staticmethod
     def define_body(text, image_list=None, txt_from_pdf=None):
 
-        model_id = Config.config['bedrock']['api_request']['modelId']
-        model_provider = model_id.split('.')[0]
-        body = Config.config['bedrock']['api_request']['body']
-
         if txt_from_pdf:
             print(f"读取上传的pdf；{txt_from_pdf}")
             text = f"用户上传的pdf内容：{txt_from_pdf}, 用户：" + text
 
-        if model_provider == 'amazon':
+        model_id = Config.config['bedrock']['api_request']['modelId']
+        model_provider = model_id.split('.')[0]
+        body = Config.config['bedrock']['api_request']['body']
+
+        if model_provider == 'alibaba':
+            body['messages'] = [
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ]
+        elif model_provider == 'amazon':
             body['inputText'] = text
         elif model_provider == 'meta':
             if 'llama3' in model_id:
@@ -704,6 +722,9 @@ class UserInput:
         memories = GlobalMemory.get_memories()
         if Config.use_RAG:
             retrieved_text = RAG.rag.get_retrieved_text(user_text)
+            contents = [ele["content"] for ele in retrieved_text]
+            print("总数：" + str(len(contents)))
+            print('\n------------------------------------------------------------\n'.join(contents))  # 直接拼接
             user_text_with_prompt = f'''<prompt>
 以下是对话记录（最后的是最新一次的对话记录）：<history>
 {text_history}
@@ -743,7 +764,7 @@ class UserInput:
 你的所有输出所用的语言必须与question内的语言一致。
 </prompt>
 '''
-        print(user_text_with_prompt)
+        #print(user_text_with_prompt)
 
         Bedrock.generate_response(user_text, user_text_with_prompt)  # 生成音频
 
@@ -1081,7 +1102,6 @@ class RAG:
                 with open(output_file, "r", encoding='utf-8') as file:
                     txt = file.read()
                     RAG.doc_texts += txt.split('bubu')
-                continue
             else:
                 if not embed_model:
                     embed_model = HuggingFaceEmbeddings(
@@ -1284,6 +1304,10 @@ class RAG:
                 else:
                     retrieved_text["content"] = '\n'.join(RAG.doc_texts)
                 retrieved_texts.append(retrieved_text)
+
+            contents = [ele["content"] for ele in retrieved_texts]
+            socketio.emit("retrievedRAG", contents)
+
             return retrieved_texts
 
 # 全局记忆管理

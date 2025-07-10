@@ -1,6 +1,6 @@
 {
     "temperature": "0.1",
-    "audio": false,
+    "audio": true,
     "language": "0",
     "use_RAG": false,
     "embedding_model": "5"
